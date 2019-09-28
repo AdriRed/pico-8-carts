@@ -9,7 +9,7 @@ function _init()
 	right = 1
 	❎ = 5
 	🅾️ = 4
-	fps_limit = 10
+	fps_limit = 4
 	fps_count = 0
 	make_player()
 	init_prop()
@@ -17,11 +17,11 @@ end
 
 function _update()
 	if (player.alive) then
-		if (fps_count == fps_limit) then
+		if (fps_count == fps_limit) then			
+			check_bounds()
 			get_dir()
 			move_player()
-			update_prop()			
-			check_bounds()
+			update_prop()
 			fps_count -= fps_limit
 		end
 		fps_count += 1
@@ -81,23 +81,23 @@ function get_dir()
 end
 
 function move_player()
-	move(player.head, true)
+	move(player.head)
 	foreach(player.tail, move)
 end
 
 function move(seg, forward)
-	forward = forward or true
-	local direction = 1
-	if (not forward) direction = -1
+	if (forward == nil) forward = true
+	local positive = 1
+	if (not forward) positive = -1
 
 	if (seg.dir == up) then
-		seg.posy -= (8 * direction)
+		seg.posy -= (8 * positive)
 	elseif (seg.dir == right) then
-		seg.posx += (8 * direction)
+		seg.posx += (8 * positive)
 	elseif (seg.dir == down) then
-		seg.posy += (8 * direction)
+		seg.posy += (8 * positive)
 	else 
-		seg.posx -= (8 * direction)
+		seg.posx -= (8 * positive)
 	end
 end
 
@@ -162,7 +162,11 @@ end
 function update_prop()
 	prop.dir += 1
 	prop.dir %= 4
-	if (prop.posx == player.head.posx and prop.posy == player.head.posy) add_tail(player.tail[#player.tail])
+	if (prop.posx == player.head.posx and prop.posy == player.head.posy) then
+		add_tail(player.tail[#player.tail])
+		prop.posx = flr(rnd(16)) * 8
+		prop.posy = flr(rnd(16)) * 8
+	end
 end
 __gfx__
 00000000000330000b330000000000000000000003b333b000000000033b33b000000000033b3330000000000004bb0000000000000000000000000000000000
