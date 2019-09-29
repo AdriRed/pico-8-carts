@@ -2,6 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
 --main
+
 function _init()
 	up = 2
 	down = 3
@@ -13,33 +14,39 @@ function _init()
 	fps_count = 0
 	make_player()
 	init_prop()
+	_update = game_loop;
+	_draw = draw_loop;
 end
 
-function _update()
-	if (player.alive) then
-		if (fps_count == fps_limit) then			
-			check_bounds()
-			get_dir()
-			move_player()
-			update_prop()
-			fps_count -= fps_limit
-		end
-		fps_count += 1
-	else
-		if (btnp(❎)) _init()
+function gameover_loop()
+	if (btnp(❎)) _init()
+end
+
+function game_loop()
+	printh("Entered gameloop")
+	if (fps_count == fps_limit and player.alive) then			
+		check_bounds()
+		get_dir()
+		move_player()
+		update_prop()
+		fps_count -= fps_limit
+	elseif (not player.alive) then 
+		_update = gameover_loop
+		_draw = dgameover_loop
+	end
+	fps_count += 1
+end
+
+function draw_loop()
+	if (fps_count == fps_limit and player.alive) then
+		cls()
+		draw_player()
+		spr(prop_spr + prop.dir, prop.posx, prop.posy)
 	end
 end
 
-function _draw()
-	if (player.alive) then
-		if (fps_count == fps_limit) then
-			cls()
-			draw_player()
-			spr(prop_spr + prop.dir, prop.posx, prop.posy)
-		end
-	else
-		print("press ❎ to restart", 28, 56, 7)
-	end
+function dgameover_loop()
+	print("press ❎ to restart", 28, 56, 7)
 end
 -->8
 --player
@@ -177,3 +184,9 @@ __gfx__
 00700700377bb77bb3743bb000088000000080000b33bbb0bbb3333b00b3333b0b333bb300b3bb0000b333b30008800000888800008888000088880000000000
 00000000bb33b3bbbb773b000008800000000000033bb3b03b33bb3b000b33bb0bbb3b3b000b300000033bb30000000000088000008888000008800000000000
 000000000b333bb00bb3000000088000000000000bb333b00000000000000000033b33b000000000000000000000000000000000000880000000000000000000
+0a0a00000a0a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00a0000000a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+bbabb0000bab00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+b9a9b0000bab00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0bab00000bab00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00a0000000a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

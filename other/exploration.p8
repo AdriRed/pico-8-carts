@@ -497,7 +497,7 @@ function appr(val,target,amount)
  	return max(val - amount, target)
  else
  	return min(val + amount, target)
-	end
+ end
 end
 
 function sign(v)
