@@ -169,12 +169,15 @@ function init_prop()
 end
 
 function update_prop()
+	printh("PROP "..prop.posx..", "..prop.posy)
 	prop.dir += 1
 	prop.dir %= 4
 	if (prop.posx == player.head.posx and prop.posy == player.head.posy) then
 		add_tail(player.tail[#player.tail])
-		prop.posx = flr(rnd(16)) * 8
-		prop.posy = flr(rnd(16)) * 8
+		local x = flr(rnd(16)) * 8
+		local y = flr(rnd(16)) * 8
+		prop.posx = x
+		prop.posy = y
 	end
 end
 -->8
@@ -190,7 +193,6 @@ function add_particle()
 		circ(self.posx, self.posx, self.maxlife - self.life + 3, 8)
 	end
 	function p:update ()
-		--printh("LIFE "..self.life)
 		if (self.life == 0) then 
 			del(part_sys, self)
 		else
