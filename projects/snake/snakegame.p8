@@ -14,6 +14,8 @@ function _init()
 	fps_count = 0
 	make_player()
 	init_prop()
+	part_sys = {}
+	--add_particle()
 	_update = game_loop;
 	_draw = draw_loop;
 end
@@ -23,12 +25,12 @@ function gameover_loop()
 end
 
 function game_loop()
-	printh("Entered gameloop")
 	if (fps_count == fps_limit and player.alive) then			
 		check_bounds()
 		get_dir()
 		move_player()
 		update_prop()
+		update_partsys()
 		fps_count -= fps_limit
 	elseif (not player.alive) then 
 		_update = gameover_loop
@@ -175,6 +177,45 @@ function update_prop()
 		prop.posy = flr(rnd(16)) * 8
 	end
 end
+-->8
+--particle system
+function add_particle()
+	local p = {}
+	p.posx = prop.posx + 4
+	p.posy = prop.posy + 4
+	p.maxlife = 5
+	p.life = p.maxlife
+	function p:draw ()
+		printh("DRAW "..self.posx..", "..self.posy)
+		circ(self.posx, self.posx, self.maxlife - self.life + 3, 8)
+	end
+	function p:update ()
+		--printh("LIFE "..self.life)
+		if (self.life == 0) then 
+			del(part_sys, self)
+		else
+			self.life -= 1
+			self:draw()
+		end
+	end
+	add(part_sys, p)
+end
+
+function update_partsys()
+	--printh("Update partsys")
+	--printh("N PARTICLES "..#part_sys)
+	if (#part_sys == 0) then
+		printh("Add part")
+		add_particle()
+	else
+		--printh("Update part")
+		for p in all(part_sys) do
+			p:update()
+		end
+	end
+end
+
+
 __gfx__
 00000000000330000b330000000000000000000003b333b000000000033b33b000000000033b3330000000000004bb0000000000000000000000000000000000
 0000000000333b00bb77b30000000000000000000bbb3b30b3333bbb0bbb3b3b000b33bb0bbb3bb0000333b300040000000b4b000000000000b4b00000000000
