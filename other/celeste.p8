@@ -1382,8 +1382,7 @@ function appr(val,target,amount)
 end
 
 function sign(v)
-	return v>0 and 1 or
-								v<0 and -1 or 0
+	return v>0 and 1 or v<0 and -1 or 0
 end
 
 function maybe()
