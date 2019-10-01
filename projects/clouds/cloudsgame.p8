@@ -14,6 +14,7 @@ max_time = 6
 min_time = 2
 max_life = 30
 min_life = 20
+gravity = -3
 t = 0
 
 p_limit = 6
@@ -24,7 +25,8 @@ black,dark_blue,dark_purple,dark_green,brown,dark_gray,light_gray,white,red,oran
 clouds = {}
 
 function _init()
-    add_cloud(64, 64)
+    init_player(64, 64)
+    add_cloud(64, 90)
     next_p = rndb(min_time, max_time)
 end
 
@@ -45,12 +47,23 @@ function _update()
             p:update()
         end
         c:update()
-        if (t == next_p or #c.ps < p_limit) then
-            t = 0
-            next_p = rndb(min_time, max_time)
-            if (c.dx ~= 0 and c.dy ~= 0) add_part(c.ps, c)
-        end
      end
+end
+
+function init_player(x, y)
+    player = {}
+    player.x, player.y = x, y
+    player.dx, player.dy = 0, 0
+    player.update = function(self)
+        
+    end
+    player.draw = function(self)
+        
+    end
+    player.hitbox = {}
+    player.w, player.h = 8, 8
+    player.flip = {x = false, y = false}
+
 end
 
 function add_cloud(x, y)
@@ -60,7 +73,16 @@ function add_cloud(x, y)
     cloud.dx = 0
     cloud.dy = 0
     cloud.ps = {}
+    cloud.hitbox = {}
+    cloud.hitbox.w = 22
+    cloud.hitbox.h = 3
+    cloud.hitbox.active = false
     cloud.update = function(self)
+        if (t == next_p or #self.ps < p_limit) then
+            t = 0
+            next_p = rndb(min_time, max_time)
+            if (self.dx ~= 0 or self.dy ~= 0) add_part(self.ps, self)
+        end
         self.dx -= self.dx * friction
         self.dy -= self.dy * friction
         change_dir(self)
@@ -75,11 +97,15 @@ function add_cloud(x, y)
         if (self.y <= low_limit) self.y = low_limit
     end
     cloud.draw = function(self)
-        spr(spr_cloud_e, self.x-12, self.y-4)
-        spr(spr_cloud_i, self.x-4, self.y-4)
-        spr(spr_cloud_e, self.x+4, self.y-4, 1.0, 1.0, true, false)
+        spr(spr_cloud_e, self.x-12, self.y-2)
+        spr(spr_cloud_i, self.x-4, self.y-2)
+        spr(spr_cloud_e, self.x+4, self.y-2, 1.0, 1.0, true, false)
     end
     add(clouds, cloud)
+end
+
+function boolsign(bool)
+    return bool and 1 or -1
 end
 
 function sign(v)
@@ -89,8 +115,8 @@ end
 function add_part(psys, father)
     printh("Added particle")
     local p = {}
-    p.x = father.x
-    p.y = father.y
+    p.x = father.x - father.dx
+    p.y = father.y - father.dy / 2
     p.dx = father.dx
     p.dy = father.dy
     p.maxlife = rndb(min_life, max_life)
@@ -126,11 +152,11 @@ function rndb(low, high)
     return flr(rnd(high-low+1)+low)
 end
 __gfx__
-00000000077777777777777700000000000000000000000000000000aaaaaaaa0000000000000000000000000000000000000000000000000000000000000000
-00000000077767767677767700777000000000000000000000000000aaaaaaaa0aaaaaa000000000000000000000000000000000000000000000000000000000
-00700700007766766677766707677600007770000007700000000000aaaaaaaa0aaaaaa000aaaa00000000000000000000000000000000000000000000000000
-00077000006777667777776677766760067777000067760000077000aaaaaaaa0aaaaaa000aaaa00000aa0000000000000000000000000000000000000000000
-00077000000677777777777706777760007766000006600000000000aaaaaaaa0aaaaaa000aaaa00000aa0000000000000000000000000000000000000000000
-00700700000667777777767700666600006600000000000000000000aaaaaaaa0aaaaaa000aaaa00000000000000000000000000000000000000000000000000
-00000000000066666666606700000000000000000000000000000000aaaaaaaa0aaaaaa000000000000000000000000000000000000000000000000000000000
-00000000000000660660006600000000000000000000000000000000aaaaaaaa0000000000000000000000000000000000000000000000000000000000000000
+00000000077777777777777700000000000000000000000000000000222222220000000000000000000000000000000000000000000000000000000000000000
+000000000777677676777677007770000000000000000000000000002eeeeee20000000000000000000000000000000000000000000000000000000000000000
+007007000077667666777667076776000077700000077000000000002ee4ee420000000000000000000000000000000000000000000000000000000000000000
+000770000067776677777766777667600677770000677600000770002eeeeee20000000000000000000000000000000000000000000000000000000000000000
+000770000006777777777777067777600077660000066000000000002eeeeee20000000000000000000000000000000000000000000000000000000000000000
+007007000006677777777677006666000066000000000000000000002eeeeee20000000000000000000000000000000000000000000000000000000000000000
+000000000000666666666067000000000000000000000000000000002eeeeee20000000000000000000000000000000000000000000000000000000000000000
+00000000000000660660006600000000000000000000000000000000222222220000000000000000000000000000000000000000000000000000000000000000
