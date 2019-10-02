@@ -8,8 +8,8 @@ speed_ptick = 0.3
 max_speed = 3
 low_limit, up_limit = 0, 128
 friction = 0.07
-spr_cloud_p = 3
-sprs_cloud_p = 3
+friction_p = 0.35
+spr_cl_p0, spr_cl_p1, spr_cl_p2, spr_cl_p3 = 3, 4, 5, 6
 max_time = 6
 min_time = 2
 max_life = 30
@@ -17,7 +17,8 @@ min_life = 20
 gravity = -3
 t = 0
 
-p_limit = 6
+p_max = 1
+p_min = 1
 
 left,right,up,down,fire1,fire2=0,1,2,3,4,5
 black,dark_blue,dark_purple,dark_green,brown,dark_gray,light_gray,white,red,orange,yellow,green,blue,indigo,pink,peach=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
@@ -73,12 +74,18 @@ function add_cloud(x, y)
     cloud.dx = 0
     cloud.dy = 0
     cloud.ps = {}
+    cloud.p_limit = function(self)
+        return map(magnitude(self.dx, self.dy), 0, magnitude(max_speed, max_speed), p_min, p_max)
+    end
     cloud.hitbox = {}
+    cloud.hitbox.x = cloud.x
+    cloud.hitbox.y = cloud.y
     cloud.hitbox.w = 22
     cloud.hitbox.h = 3
-    cloud.hitbox.active = false
+    cloud.hitbox.active = true
+    cloud.has_hitbox = true
     cloud.update = function(self)
-        if (t == next_p or #self.ps < p_limit) then
+        if (t >= next_p and #self.ps < self:p_limit()) then
             t = 0
             next_p = rndb(min_time, max_time)
             if (self.dx ~= 0 or self.dy ~= 0) add_part(self.ps, self)
@@ -86,11 +93,14 @@ function add_cloud(x, y)
         self.dx -= self.dx * friction
         self.dy -= self.dy * friction
         change_dir(self)
+        if (abs(self.dx) < 0.008) self.dx = 0
+        if (abs(self.dy) < 0.008) self.dy = 0
         if (btnp(fire1)) add_part(self.ps, self)
         if (abs(self.dx) >= max_speed) self.dx = sign(self.dx) * max_speed
         if (abs(self.dy) >= max_speed) self.dy = sign(self.dy) * max_speed
         self.x += self.dx
         self.y += self.dy
+        --printh(self.dx..", "..self.dy)
         if (self.x >= up_limit) self.x = up_limit
         if (self.y >= up_limit) self.y = up_limit
         if (self.x <= low_limit) self.x = low_limit
@@ -104,6 +114,12 @@ function add_cloud(x, y)
     add(clouds, cloud)
 end
 
+function map(value, rangemin, rangemax, mapmin, mapmax)
+    local totalr = rangemax - rangemin
+    local valr = (value - rangemin) / totalr
+    return valr * (mapmax-mapmin) + mapmin
+end
+
 function boolsign(bool)
     return bool and 1 or -1
 end
@@ -112,31 +128,40 @@ function sign(v)
     return v>0 and 1 or v<0 and -1 or 0
 end
 
+function magnitude(x, y)
+    return sqrt(x*x +y*y)
+end
+
 function add_part(psys, father)
-    printh("Added particle")
+    --printh("Added particle")
     local p = {}
-    p.x = father.x - father.dx
-    p.y = father.y - father.dy / 2
+    p.x = father.x - father.dx*2.5
+    p.y = father.y + 2 
     p.dx = father.dx
     p.dy = father.dy
     p.maxlife = rndb(min_life, max_life)
     p.life = p.maxlife
+    
     p.update = function(self)
-        printh("UPDATE")
+        --printh("UPDATE")
+        --printh("VELOCITY "..p.dx..", "..p.dy)
         if (self.life <= 0) then 
             del(psys, self) 
             return
         end
+        if (self.dx < 0.01) self.dx = 0
+        if (self.dy < 0.01) self.dy = 0
         self.life -= 1
         self.x += self.dx
         self.y += self.dy
-        self.dx -= friction * sign(self.dx)
-        self.dy -= friction * sign(self.dy)
+        self.dx -= friction_p * sign(self.dx)
+        self.dy -= friction_p * sign(self.dy)
     end
+    p.sprites = {spr_cl_p0, spr_cl_p0, spr_cl_p1, spr_cl_p1, spr_cl_p2, spr_cl_p2, spr_cl_p2, spr_cl_p3, spr_cl_p3, spr_cl_p3}
     p.draw = function(self)
-        printh("DRAW")
-        sprite = spr_cloud_p + ((self.maxlife - self.life) / self.maxlife) * sprs_cloud_p
-        spr(ceil(sprite), self.x-4, self.y-4)
+        local sprite = min(flr((1-self.life / self.maxlife) * (#self.sprites)) + 1, #self.sprites)
+        printh("Index "..sprite)
+        spr(self.sprites[sprite], self.x-4, self.y-4)
     end
     add(psys, p)
 end
