@@ -23,7 +23,7 @@ p_min = 1
 left,right,up,down,fire1,fire2=0,1,2,3,4,5
 black,dark_blue,dark_purple,dark_green,brown,dark_gray,light_gray,white,red,orange,yellow,green,blue,indigo,pink,peach=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
 
-clouds = {}
+objects = {}
 
 function _init()
     init_player(64, 64)
@@ -52,7 +52,7 @@ function _update()
 end
 
 function init_player(x, y)
-    player = {}
+    local player = {}
     player.x, player.y = x, y
     player.dx, player.dy = 0, 0
     player.update = function(self)
@@ -62,9 +62,11 @@ function init_player(x, y)
         
     end
     player.hitbox = {}
-    player.w, player.h = 8, 8
+    player.hitbox.w, player.hitbox.h, player.hitbox.x, player.hitbox.y = 8, 8, player.x, player.yellow
+    player.hitbox.active = true
+    player.has_hitbox = true
     player.flip = {x = false, y = false}
-
+    add(objects, player)
 end
 
 function add_cloud(x, y)
@@ -111,7 +113,7 @@ function add_cloud(x, y)
         spr(spr_cloud_i, self.x-4, self.y-2)
         spr(spr_cloud_e, self.x+4, self.y-2, 1.0, 1.0, true, false)
     end
-    add(clouds, cloud)
+    add(objects, cloud)
 end
 
 function map(value, rangemin, rangemax, mapmin, mapmax)
