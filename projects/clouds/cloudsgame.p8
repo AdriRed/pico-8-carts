@@ -17,7 +17,8 @@ min_life = 20
 gravity = -3
 t = 0
 total_objects = 0
-
+steps = 4
+spr_player = 7
 p_max = 1
 p_min = 1
 
@@ -58,23 +59,35 @@ function init_player(x, y)
     total_objects += 1
     player.x, player.y = x, y
     player.dx, player.dy = 0, 0
-    player.update = function(self)
-        local hitboxes = check_hitboxes(self)
-        change_dir(self)
-        if (#hitboxes > 0) then
-            for hb in all(hitboxes) do
-                
-            end
-        end
-    end
-    player.draw = function(self)
-        
-    end
     player.hitbox = {}
     player.hitbox.w, player.hitbox.h, player.hitbox.x, player.hitbox.y = 8, 8, player.x, player.yellow
     player.hitbox.active = true
     player.has_hitbox = true
     player.flip = {x = false, y = false}
+    player.update = function(self)
+        change_dir(self)
+        local tempx = self.x+self.dx
+        local tempy = self.y+self.dy
+        for obj in all(objects) do
+            if (obj.has_hitbox) then
+                for newx=self.x+self.dx,self.x,-self.dx/steps do
+                    if (not box_hit(self.hitbox, self.hitbox)) then
+                        tempx = abs(newx-self.x) > abs(tempx-self.x) and abs(newx-self.x) or abs(tempx-self.x)
+                    end
+                end
+                for newy=self.y+self.dy,self.y,-self.dy/steps do
+                    if (not box_hit(self.hitbox, self.hitbox)) then
+                        tempx = abs(newy-self.y) > abs(tempx-self.y) and abs(newy-self.y) or abs(tempx-self.y)
+                    end
+                end
+            end
+        end
+        self.x = tempx
+        self.y = tempy
+    end
+    player.draw = function(self)
+        spr(spr_player, self.hitbox.x-4, self.hitbox-4)
+    end
     add(objects, player)
 end
 
@@ -105,7 +118,7 @@ function add_cloud(x, y)
         end
         self.dx -= self.dx * friction
         self.dy -= self.dy * friction
-        change_dir(self)
+        --change_dir(self)
         if (abs(self.dx) < 0.008) self.dx = 0
         if (abs(self.dy) < 0.008) self.dy = 0
         if (btnp(fire1)) add_part(self.ps, self)
@@ -137,29 +150,18 @@ function check_hitboxes(target)
     local hitboxes = {}
     for o in all(objects) do
         if (target.id ~= o.id) then
-            if (check_hitbox(target.hitbox, o.hitbox)) add(hitboxes, o.hitbox)
+            --if (check_hitbox(target.hitbox, o.hitbox)) add(hitboxes, o.hitbox)
         end
     end
     return hitboxes
 end
 
-function box_hit(
-    x1,y1,
-    w1,h1,
-    x2,y2,
-    w2,h2)
-    
-    local hit=false
-    local xd=abs((x1+(w1/2))-(x2+(w2/2)))
-    local xs=w1*0.5+w2*0.5
-    local yd=abs((y1+(h1/2))-(y2+(h2/2)))
-    local ys=h1/2+h2/2
-    if xd<xs and 
-       yd<ys then 
-      hit=true 
-    end
-    
-    return hit
+function box_hit(box1, box2)
+    local xd=abs((box1.x+(box1.w/2))-(box2.x+(box2.w/2)))
+    local xs=box1.w*0.5+box2.w*0.5
+    local yd=abs((box1.y+(box1.h/2))-(box2.y+(box2.h/2)))
+    local ys=box1.h/2+box2.h/2
+    return (xd<xs and yd<ys and box1.active and box2.active)    
   end
 
 function boolsign(bool)
