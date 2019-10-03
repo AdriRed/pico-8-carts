@@ -35,9 +35,11 @@ end
 
 function _draw()
     cls()
-    for c in all(clouds) do
-        for p in all(c.ps) do
-            p:draw()
+    for c in all(objects) do
+        if (c.ps ~= nil) then
+            for p in all(c.ps) do
+                p:draw()
+            end
         end
         c:draw()
      end
@@ -45,9 +47,11 @@ end
 
 function _update()
     t += 1
-    for c in all(clouds) do
-        for p in all(c.ps) do
-            p:update()
+    for c in all(objects) do
+        if (c.ps ~= nil) then
+            for p in all(c.ps) do
+                p:update()
+            end
         end
         c:update()
      end
@@ -60,33 +64,34 @@ function init_player(x, y)
     player.x, player.y = x, y
     player.dx, player.dy = 0, 0
     player.hitbox = {}
-    player.hitbox.w, player.hitbox.h, player.hitbox.x, player.hitbox.y = 8, 8, player.x, player.yellow
+    player.hitbox.w, player.hitbox.h, player.hitbox.x, player.hitbox.y = 8, 8, player.x, player.y
     player.hitbox.active = true
     player.has_hitbox = true
     player.flip = {x = false, y = false}
     player.update = function(self)
         change_dir(self)
+        self.dy += gravity
         local tempx = self.x+self.dx
         local tempy = self.y+self.dy
-        for obj in all(objects) do
-            if (obj.has_hitbox) then
-                for newx=self.x+self.dx,self.x,-self.dx/steps do
-                    if (not box_hit(self.hitbox, self.hitbox)) then
-                        tempx = abs(newx-self.x) > abs(tempx-self.x) and abs(newx-self.x) or abs(tempx-self.x)
-                    end
-                end
-                for newy=self.y+self.dy,self.y,-self.dy/steps do
-                    if (not box_hit(self.hitbox, self.hitbox)) then
-                        tempx = abs(newy-self.y) > abs(tempx-self.y) and abs(newy-self.y) or abs(tempx-self.y)
-                    end
-                end
-            end
-        end
+        -- for obj in all(objects) do
+        --     if (obj.has_hitbox) then
+        --         for newx=self.x+self.dx,self.x,-self.dx/steps do
+        --             if (not box_hit(self.hitbox, self.hitbox)) then
+        --                 tempx = abs(newx-self.x) > abs(tempx-self.x) and abs(newx-self.x) or abs(tempx-self.x)
+        --             end
+        --         end
+        --         for newy=self.y+self.dy,self.y,-self.dy/steps do
+        --             if (not box_hit(self.hitbox, self.hitbox)) then
+        --                 tempx = abs(newy-self.y) > abs(tempx-self.y) and abs(newy-self.y) or abs(tempx-self.y)
+        --             end
+        --         end
+        --     end
+        -- end
         self.x = tempx
         self.y = tempy
     end
     player.draw = function(self)
-        spr(spr_player, self.hitbox.x-4, self.hitbox-4)
+        spr(spr_player, self.hitbox.x-4, self.hitbox.y-4)
     end
     add(objects, player)
 end
@@ -223,7 +228,7 @@ end
 __gfx__
 00000000077777777777777700000000000000000000000000000000222222220000000000000000000000000000000000000000000000000000000000000000
 000000000777677676777677007770000000000000000000000000002eeeeee20000000000000000000000000000000000000000000000000000000000000000
-007007000077667666777667076776000077700000077000000000002ee4ee420000000000000000000000000000000000000000000000000000000000000000
+007007000077667666777667076776000077700000077000000000002eedeed20000000000000000000000000000000000000000000000000000000000000000
 000770000067776677777766777667600677770000677600000770002eeeeee20000000000000000000000000000000000000000000000000000000000000000
 000770000006777777777777067777600077660000066000000000002eeeeee20000000000000000000000000000000000000000000000000000000000000000
 007007000006677777777677006666000066000000000000000000002eeeeee20000000000000000000000000000000000000000000000000000000000000000
