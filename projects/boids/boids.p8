@@ -3,8 +3,10 @@ version 18
 __lua__
 left,right,up,down,fire1,fire2=0,1,2,3,4,5
 black,dark_blue,dark_purple,dark_green,brown,dark_gray,light_gray,white,red,orange,yellow,green,blue,indigo,pink,peach=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
-neigh_ran = 8
-neigh_count = 128 / neigh_ran * 2 + 1
+boid_ran = 8
+boid_diam = boid_ran*2
+chunks_side = 128 / boid_diam
+max_vel = 0.5
 
 function copy(o)
   local c
@@ -35,8 +37,23 @@ function m_vec:mult(c)
   self.x *= c
   self.y *= c
 end
-function m_vec:same(c)
+function m_vec:equals(c)
   return self.x == c.x and self.y == c.y
+end
+function m_vec:modulo()
+  return sqrt(self.x*self.x+self.y*self.y)
+end
+function m_vec:norm(n)
+  local m = n or 1
+  local modulo = self:modulo()
+  printh(modulo)
+  local o = new_vec(self.x/modulo, self.y/modulo)
+  o:mult(m)
+  return o
+end
+function m_vec:clamp(n)
+  if (abs(self.x) > n or abs(self.y) > n) return self:norm(n)
+  return self
 end
 function new_vec(x, y)
   local o = copy(m_vec);
@@ -47,7 +64,7 @@ end
 
 m_boid = {
   pos = new_vec(0, 0),
-  dir = new_vec(0, 0)
+  vel = new_vec(0, 0)
 }
 
 function new_boid(x, y)
@@ -58,47 +75,57 @@ function new_boid(x, y)
 end
 
 function m_boid:update(list)
-  
+  local next_vel = new_vec(rnd_btw(-max_vel, max_vel), rnd_btw(-max_vel, max_vel))
+  self.vel:add(next_vel)
+  self.vel = self.vel:clamp(max_vel)
+  self.pos:add(self.vel)
 end
 
 function m_boid:draw()
   pset(self.pos.x,self.pos.y,self.col)
-  
 end
+
 boid_l = {}
+
 function _init()
   for i=0,50 do
     local px = rnd_btw(10, 119)
     local py = rnd_btw(10, 119)
     add(boid_l, new_boid(px, py))
-    
   end
 end
 
 function _update()
-  boid_chunks = {}
+  distribute_boids()
   for b in all(boid_l) do
-    local gx = flr(b.pos.x / neigh_ran)
-    local gy = flr(b.pos.y / neigh_ran)
-    local name = gy + gx * neigh_count
-    if (not boid_chunks[name]) boid_chunks[name] = {}
-    add(boid_chunks[name], b)
+    b:update()
   end
 end
 
 function _draw()
   cls(black)
+  -- debug_chunks();
   for b in all(boid_l) do
     b:draw()
   end
+end
+
+function distribute_boids()
+  boid_chunks = {}
+  for b in all(boid_l) do
+    local gx = flr(b.pos.x / boid_diam)
+    local gy = flr(b.pos.y / boid_diam)
+    local name = gy + gx * boid_diam
+    if (not boid_chunks[name]) boid_chunks[name] = {}
+    add(boid_chunks[name], b)
+  end
+end
+
+function debug_chunks(params)
   for k,v in pairs(boid_chunks) do
-    for b in all(v) do
-      --print(flr(k/neigh_count)..','..k%neigh_count, b.pos.x-5, b.pos.y-10, white)
-    end
-    local gx = flr(k/neigh_count)
-    local gy = k%neigh_count
-    -- rect(gx * neigh_count ,gy * neigh_count ,gx * neigh_count + neigh_ran -1,gy * neigh_count + neigh_count -1,red)
-    printh(#v..' boids found in chunk '..flr(k/neigh_count)..','..k%neigh_count..' ('..k..')')
+    local gx = flr(k/boid_diam)
+    local gy = k%boid_diam
+    rect(gx * boid_diam ,gy * boid_diam ,(gx+1) * boid_diam -1,(gy+1) * boid_diam -1,red)
   end
 end
 
