@@ -6,6 +6,7 @@ black,dark_blue,dark_purple,dark_green,brown,dark_gray,light_gray,white,red,oran
 boid_ran = 4
 boid_diam = boid_ran*2
 chunks_side = 128 / boid_diam
+min_vel = 0.1
 max_vel = 0.5
 
 function copy(o)
@@ -25,6 +26,37 @@ m_vec = {
     x = 0,
     y = 0,
 }
+function vec_add(v1, v2)
+  return new_vec(v1.x + v2.x, v1.y + v2.y)
+end
+function vec_sub(v1, v2)
+  return new_vec(v2.x - v1.x, v2.y - v1.y)
+end
+function vec_mult(v, c)
+  return new_vec(v.x * c, v.y * c)
+end
+function vec_div(v, c)
+  return vec_mult(v, 1/c)
+end
+function vec_equals(v1, v2)
+  return v1.x == v2.x and v1.y == v2.y
+end
+function vec_modulo(v)
+  return sqrt(v.x*v.x+v.y*v.y)
+end
+function vec_norm(v, n)
+  local m = n or 1
+  local modulo = vec_modulo(v)
+  if (modulo == 0) return new_vec(0, 0)
+  local o = vec_div(v, modulo)
+  return vec_mult(o, m)
+end
+function vec_clamp(v, min, max)
+  local absx, absy = abs(v.x), abs(v.y)
+  if (absx < min or absy < min) return vec_norm(v, min)
+  if (absx > max or absx > max) return vec_norm(v, max)
+  return v
+end
 function m_vec:add(v)
   self.x += v.x
   self.y += v.y
@@ -46,13 +78,13 @@ end
 function m_vec:norm(n)
   local m = n or 1
   local modulo = self:modulo()
-  local o = new_vec(self.x/modulo, self.y/modulo)
-  o:mult(m)
-  return o
+  if (modulo == 0) self.x, self.y = 0, 0
+  self.x, self.y = self.x / modulo * m, self.y / modulo * m
 end
-function m_vec:clamp(n)
-  if (abs(self.x) > n or abs(self.y) > n) return self:norm(n)
-  return self
+function m_vec:clamp(min, max)
+  local absx, absy = abs(self.x), abs(self.y)
+  if (absx < min or absy < min) self:norm(min)
+  if (absx > max or absx > max) self:norm(max)
 end
 function new_vec(x, y)
   local o = copy(m_vec);
@@ -84,7 +116,7 @@ end
 function m_boid:move()
   local next_vel = new_vec(rnd_btw(-max_vel, max_vel), rnd_btw(-max_vel, max_vel))
   self.vel:add(next_vel)
-  self.vel = self.vel:clamp(max_vel)
+  self.vel:clamp(min_vel, max_vel)
   self.pos:add(self.vel)
   self.pos = check_boundaries(self.pos)
 end
@@ -104,16 +136,15 @@ function m_boid:draw()
 end
 
 function m_boid:neighbours(chunk_list)
-  printh(self.chunk)
   local arround = exam_chunks(self.chunk)
-  printh(arround)
-  debug_surr_chunks(arround)
+  -- perform_calcs(arround, chunk_list)
+  -- debug_surr_chunks(arround)
 end
 
 function debug_surr_chunks(list)
   for var in all(list) do
-    local r, c = getCol(var), getRow(var)
-    rect(c*boid_diam+1,r*boid_diam+1,c*(boid_diam+1)-2,r*(boid_diam+1)-2,green)
+    local gy, gx = getCol(var), getRow(var)
+    rect(gx * boid_diam +1,gy * boid_diam +1,(gx+1) * boid_diam -2,(gy+1) * boid_diam -2,green)
   end
 end
 
@@ -130,9 +161,10 @@ function exam_chunks(number)
 end
 
 boid_l = {}
+boid_chunks = {}
 
 function _init()
-  for i=1,1 do
+  for i=1,20 do
     local px = rnd_btw(10, 119)
     local py = rnd_btw(10, 119)
     add(boid_l, new_boid(px, py))
@@ -154,7 +186,6 @@ function _draw()
   end
 end
 
-boid_chunks = {}
 function distribute_boids()
   boid_chunks = {}
   for i=1,#boid_l do
