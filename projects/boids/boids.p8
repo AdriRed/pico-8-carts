@@ -83,7 +83,7 @@ function m_vec:norm(n)
 end
 function m_vec:clamp(min, max)
   local absx, absy = abs(self.x), abs(self.y)
-  if (absx < min or absy < min) self:norm(min)
+  -- if (absx < min or absy < min) self:norm(min)
   if (absx > max or absx > max) self:norm(max)
 end
 function new_vec(x, y)
@@ -114,7 +114,8 @@ function m_boid:update(list)
 end
 
 function m_boid:move()
-  local next_vel = new_vec(rnd_btw(-max_vel, max_vel), rnd_btw(-max_vel, max_vel))
+  local target = new_vec(self.pos.x + rnd_btw(-10, 10), self.pos.y + rnd_btw(-10, 10))
+  local next_vel = boid_steer(self, target)
   self.vel:add(next_vel)
   self.vel:clamp(min_vel, max_vel)
   self.pos:add(self.vel)
@@ -135,11 +136,20 @@ function m_boid:draw()
   self.state %= 2
 end
 
+function boid_steer(boid, target)
+  local desired = vec_sub(target, boid.pos)
+  desired:norm(max_vel)
+  local steer = vec_sub(desired, boid.vel)
+  return steer
+end
+
 function m_boid:neighbours(chunk_list)
   local arround = exam_chunks(self.chunk)
-  -- perform_calcs(arround, chunk_list)
   -- debug_surr_chunks(arround)
+  -- perform_calcs
+    --
 end
+
 
 function debug_surr_chunks(list)
   for var in all(list) do
@@ -164,7 +174,7 @@ boid_l = {}
 boid_chunks = {}
 
 function _init()
-  for i=1,20 do
+  for i=1,1 do
     local px = rnd_btw(10, 119)
     local py = rnd_btw(10, 119)
     add(boid_l, new_boid(px, py))
