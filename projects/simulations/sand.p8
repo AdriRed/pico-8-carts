@@ -8,12 +8,9 @@ mousex, mousey = 0, 0
 screen = {}
 
 function _init()
-    poke(0x5f2d, 1)
-    init_screen()
-end
+    cls(black)
 
-function init_screen()
-    
+    poke(0x5f2d, 1)
 end
 
 function _update()
@@ -22,7 +19,6 @@ function _update()
 end
 
 function _draw()
-    cls(black)
     pset(mousex, mousey, red)
     if (btn(fire1)) then
         pset(mousex, mousey + 1, yellow)
@@ -33,7 +29,7 @@ function _draw()
 end
 
 function sand_sim()
-    for y=127,0,-1 do
+    for y=126,0,-1 do
         for x=0,127 do
             if (pget(x,y) == yellow or pget(x, y) == orange) then
                 local color = pget(x, y)
